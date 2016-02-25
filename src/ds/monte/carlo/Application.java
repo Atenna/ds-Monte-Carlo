@@ -5,25 +5,20 @@
  */
 package ds.monte.carlo;
 
-import javax.swing.JPanel;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
 
 /**
  *
  * @author Carmen
  */
 public class Application extends javax.swing.JFrame {
-
     /**
      * Creates new form Application
      */
     public Application() {
         initComponents();
-        Settings settings = new Settings();
-        this.getContentPane().removeAll();
-        this.getContentPane().add(settings);
-        setVisible(true);
-         ((JPanel)this.getContentPane()).revalidate();
-        this.repaint();
     }
 
     /**
@@ -42,6 +37,11 @@ public class Application extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         jMenu1.setText("Settings");
+        jMenu1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jMenu1MouseClicked(evt);
+            }
+        });
         jMenuBar1.add(jMenu1);
 
         jMenu2.setText("Run");
@@ -62,6 +62,10 @@ public class Application extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void jMenu1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenu1MouseClicked
+        // Do tohto Frame-u pridat Panel (Settings)
+    }//GEN-LAST:event_jMenu1MouseClicked
 
     /**
      * @param args the command line arguments
