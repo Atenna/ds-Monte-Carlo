@@ -17,7 +17,7 @@ public abstract class Simulation extends SwingWorker {
     private static final int l = 9;
     private static Random rnd1;
     private static int n = 0;
-    private static int m;
+    private static int m = 0;
 
     @Override
     protected int[] doInBackground() throws Exception {
@@ -25,7 +25,6 @@ public abstract class Simulation extends SwingWorker {
         int[] results = new int[5];
 
         rnd1 = new Random();
-        m = 0;
         double a, y, alfa;
 
         while (n < 10000) {
@@ -39,7 +38,7 @@ public abstract class Simulation extends SwingWorker {
             }
             n++;
         }
-        double vysledok = (m / n);
+        double vysledok = (double)m/n;
 
         System.out.println(vysledok + ", m: " + m + ", n: " + n);
         return results;
