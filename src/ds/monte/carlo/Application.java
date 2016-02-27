@@ -5,20 +5,24 @@
  */
 package ds.monte.carlo;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Container;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author Carmen
  */
-public class Application extends javax.swing.JFrame {
+public class Application extends javax.swing.JFrame implements PropertyChangeListener{
     /**
      * Creates new form Application
      */
     public Application() {
         initComponents();
+        jProgressBar1.setMinimum(0);
+        jProgressBar1.setMaximum(100);
+        jProgressBar1.setValue(0);
     }
 
     /**
@@ -188,8 +192,14 @@ public class Application extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jLabel4MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel4MouseClicked
-        //Simulation monteCarlo = new Simulation();
-        //monteCarlo.execute();
+        Simulation monteCarlo = new Simulation(15000000);
+        monteCarlo.addPropertyChangeListener(this);
+        System.out.println("Simulacia vytvorena");
+        try {
+            monteCarlo.execute();
+        } catch (Exception ex) {
+            Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_jLabel4MouseClicked
 
     /**
@@ -228,6 +238,14 @@ public class Application extends javax.swing.JFrame {
         });
     }
 
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+    if ("progress".equals(evt.getPropertyName())) {
+      int progress = (Integer) evt.getNewValue();
+      jProgressBar1.setValue(progress);
+    }
+}
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;

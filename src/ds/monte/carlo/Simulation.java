@@ -1,5 +1,8 @@
 package ds.monte.carlo;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import static java.lang.Math.max;
 import java.util.Random;
 import javax.swing.SwingWorker;
 
@@ -7,7 +10,7 @@ import javax.swing.SwingWorker;
  *
  * @author Carmen
  */
-public class Simulation extends SwingWorker {
+public class Simulation extends SwingWorker<Integer, Integer>{
 
     private int numberOfReplications;
     private String parameter2;
@@ -19,8 +22,8 @@ public class Simulation extends SwingWorker {
             gen02, gen04, gen05,
             gend04;
 
-    private int time01, time12, time13, time26, time65,
-            time34, time37, time78, time90;
+    private int time01, time12, time13, time26, time65, 
+                time34, time37, time78, time90;
 
     private double part02, part04, part05;
     private double decision04;
@@ -30,6 +33,7 @@ public class Simulation extends SwingWorker {
         Simulation.seed = new Random();
         Simulation.gen01 = new Random(seed.nextInt());
         Simulation.gen12 = new Random(seed.nextInt());
+        Simulation.gen13 = new Random(seed.nextInt());
         Simulation.gen26 = new Random(seed.nextInt());
         Simulation.gen65 = new Random(seed.nextInt());
         Simulation.gen34 = new Random(seed.nextInt());
@@ -45,21 +49,32 @@ public class Simulation extends SwingWorker {
     }
 
     @Override
-    protected String doInBackground() throws Exception {
+    protected Integer doInBackground() throws Exception {
 
-        int tp = 140;    // required project length in days
-        int tp_mc = 0;      // days needed in one simulation run
+        int tp = 140;            // required project length in days
+        int tp_mc = 0;           // days needed in one simulation run
         int successful = 0;      // increment when tp_mc <= tp
+        long overalTimes = 0;
         int current = 0;
-
+        int progress = 0;
+        
         while (current < numberOfReplications) {
             generateTimes();
-            sumTimes();
+            tp_mc = sumTimes();
+            //System.out.println(tp_mc);
             successful = (tp_mc <= tp) ? (successful + 1) : successful;
+            overalTimes += tp_mc;
             tp_mc = 0;
+            current++;
+            if(current%1000==0) {
+                //System.out.println((int)((double)current/numberOfReplications*100));
+                progress = (int)((double)current/numberOfReplications*100);
+                setProgress(progress);
+            }
         }
-
-        return "Jupi";
+        System.out.println("SUCC " + (double)successful/numberOfReplications);
+        System.out.println("AVG " + (double)overalTimes/numberOfReplications);
+        return successful;
     }
 
     @Override
@@ -67,7 +82,7 @@ public class Simulation extends SwingWorker {
         // TO DO - when done create JFreeChart
     }
 
-    protected int getNumberOfReplications() {
+    protected long getNumberOfReplications() {
         return numberOfReplications;
     }
 
@@ -77,6 +92,7 @@ public class Simulation extends SwingWorker {
 
     private void generateTimes() {
         time01 = gen01.nextInt((15 - 4) + 1) + 4;
+        
         part02 = gen02.nextDouble();
         if (part02 < 0.2) {
             time12 = gen12.nextInt((29 - 10) + 1) + 10;
@@ -91,9 +107,9 @@ public class Simulation extends SwingWorker {
         decision04 = gend04.nextDouble();
         if (decision04 < 0.32) {
             // nebude sa vykonavat
-            part04 = 0;
+            time34 = 0;
             time37 = gen37.nextInt(29 - 20) + 20;
-            // cas aktivitt 7 sa predlzi o 15%
+            // cas aktivity 7 sa predlzi o 15%
             time37 += time37*0.15;
         } else {
             part04 = gen04.nextDouble();
@@ -116,10 +132,45 @@ public class Simulation extends SwingWorker {
 
         time78 = gen78.nextInt(17 - 12) + 12;
         time90 = gen90.nextInt(27 - 13) + 13;
+        
+        //System.out.println("-----------------------------------");
+        //System.out.println("1 " + time01);
+        //System.out.println("2 branch " + part02);
+        //System.out.println("2 " + time12);
+        //System.out.println("3 " + time13);
+        //System.out.println("4 branch " + part04);
+        //System.out.println("4 " + time34);
+        //System.out.println("5 branch " + part05);
+        //System.out.println("5 " + time65);
+        //System.out.println("6 " + time26);
+        //System.out.println("7 " + time37);
+        //System.out.println("8 " + time78);
+        //System.out.println("9 " + time90);
+        
     }
 
-    private void sumTimes() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    private int sumTimes() {
+        int length = time01;
+        int path1, path2, path3;
+        
+        path1 = time12 + time26;
+        
+        path2 = time13 + time34;
+        
+        path3 = time13 + time37 + time78;
+        
+        if(time34 == 0) {
+            // aktivita 4 sa nevykona, pouzijeme cesty 1 a 3
+            path2 += time65;
+            length += (path1 < path3) ? path1 : path3;
+            length += time90;
+            
+        } else {
+            // aktivita 4 sa vykona, hladame dlhsiu cestu z (1 a 2) a 3
+            int decision1 = max(path1, path2) + time65;
+            length += max(decision1, path3) + time90;
+        }
+        
+        return length;
     }
-
 }
