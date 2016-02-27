@@ -188,8 +188,8 @@ public class Application extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jLabel4MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel4MouseClicked
-        Simulation monteCarlo = new Simulation() {};
-        monteCarlo.execute();
+        //Simulation monteCarlo = new Simulation();
+        //monteCarlo.execute();
     }//GEN-LAST:event_jLabel4MouseClicked
 
     /**
