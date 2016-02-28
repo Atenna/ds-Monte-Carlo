@@ -5,10 +5,25 @@
  */
 package ds.monte.carlo;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Font;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.ImageIcon;
+import javax.swing.UIDefaults;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.category.BarRenderer;
+import org.jfree.data.category.DefaultCategoryDataset;
 
 /**
  *
@@ -18,11 +33,15 @@ public class Application extends javax.swing.JFrame implements PropertyChangeLis
     /**
      * Creates new form Application
      */
+    
+    Simulation monteCarlo;
+    
     public Application() {
         initComponents();
-        jProgressBar1.setMinimum(0);
-        jProgressBar1.setMaximum(100);
-        jProgressBar1.setValue(0);
+        initProgressBar();
+        this.setTitle("Monte Carlo");
+        ImageIcon img = new ImageIcon("img.png");
+        this.setIconImage(img.getImage());
     }
 
     /**
@@ -65,22 +84,16 @@ public class Application extends javax.swing.JFrame implements PropertyChangeLis
 
         jPanel3.setBackground(new java.awt.Color(255, 255, 255));
 
+        jProgressBar1.setForeground(new java.awt.Color(204, 204, 204));
+        jProgressBar1.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(102, 102, 102), 1, true));
+        jProgressBar1.setOpaque(true);
+
         jPanel5.setBackground(new java.awt.Color(255, 255, 255));
+        jPanel5.setLayout(new java.awt.BorderLayout());
 
-        javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
-        jPanel5.setLayout(jPanel5Layout);
-        jPanel5Layout.setHorizontalGroup(
-            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
-        );
-        jPanel5Layout.setVerticalGroup(
-            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 166, Short.MAX_VALUE)
-        );
-
-        jLabel4.setBackground(new java.awt.Color(0, 153, 0));
+        jLabel4.setBackground(new java.awt.Color(255, 255, 255));
+        jLabel4.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel4.setIcon(new javax.swing.ImageIcon("C:\\Users\\Carmen\\Documents\\NetBeansProjects\\ds Monte Carlo\\run.png")); // NOI18N
-        jLabel4.setText("jLabel4");
         jLabel4.setOpaque(true);
         jLabel4.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -96,19 +109,19 @@ public class Application extends javax.swing.JFrame implements PropertyChangeLis
                 .addContainerGap()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jProgressBar1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jProgressBar1, javax.swing.GroupLayout.DEFAULT_SIZE, 375, Short.MAX_VALUE))
                 .addContainerGap())
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addGap(134, 134, 134)
-                .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(136, Short.MAX_VALUE))
+                .addComponent(jLabel4)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 28, Short.MAX_VALUE)
+                .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, 186, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jProgressBar1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -192,7 +205,9 @@ public class Application extends javax.swing.JFrame implements PropertyChangeLis
     }// </editor-fold>//GEN-END:initComponents
 
     private void jLabel4MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel4MouseClicked
-        Simulation monteCarlo = new Simulation(15000000);
+        ImageIcon img = new ImageIcon("go.png");
+        this.setIconImage(img.getImage());
+        monteCarlo = new Simulation(15000000);
         monteCarlo.addPropertyChangeListener(this);
         System.out.println("Simulacia vytvorena");
         try {
@@ -243,6 +258,11 @@ public class Application extends javax.swing.JFrame implements PropertyChangeLis
     if ("progress".equals(evt.getPropertyName())) {
       int progress = (Integer) evt.getNewValue();
       jProgressBar1.setValue(progress);
+      if(progress==100) {
+          createGraph(monteCarlo.getHashMap());
+          ImageIcon img = new ImageIcon("img.png");
+          this.setIconImage(img.getImage());
+      }
     }
 }
     
@@ -261,4 +281,45 @@ public class Application extends javax.swing.JFrame implements PropertyChangeLis
     private javax.swing.JTextField jTextField2;
     private javax.swing.JTextField jTextField3;
     // End of variables declaration//GEN-END:variables
+
+    private void initProgressBar() {
+        jProgressBar1.setMinimum(0);
+        jProgressBar1.setMaximum(100);
+        jProgressBar1.setValue(0);
+        UIDefaults defaults = new UIDefaults();
+        defaults.put("ProgressBar[Enabled].backgroundPainter", new MyPainter(new Color(210,210,210)));
+        defaults.put("ProgressBar[Enabled].foregroundPainter", new MyPainter(new Color(92,184,92)));
+        jProgressBar1.putClientProperty("Nimbus.Overrides.InheritDefaults", Boolean.FALSE);
+        jProgressBar1.putClientProperty("Nimbus.Overrides", defaults);
+    }
+
+    private void createGraph(HashMap<Integer, Integer> dictionary) {
+        
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+        
+        for (Integer key : dictionary.keySet()) {
+            dataset.setValue(dictionary.get(key), "", ""+key);
+         }
+
+        JFreeChart chart = ChartFactory.createBarChart("Statistics Here", "", "", dataset, PlotOrientation.VERTICAL, false, false, false);
+        chart.setBackgroundPaint(Color.WHITE);
+        CategoryPlot catPlot = chart.getCategoryPlot();
+        catPlot.setRangeGridlinePaint(new Color(92,184,92));
+        
+        ValueAxis vAxis = catPlot.getRangeAxis();
+        CategoryAxis cAxis = catPlot.getDomainAxis();
+        Font font = new Font("SansSerif", Font.PLAIN, 12);
+        vAxis.setTickLabelFont(font);
+        cAxis.setTickLabelFont(font);
+        
+        BarRenderer renderer = (BarRenderer) catPlot.getRenderer();
+        Color bootstrapGreen = new Color(92,184,92);
+        renderer.setSeriesPaint(0, bootstrapGreen);
+        
+        ChartPanel chartPanel = new ChartPanel(chart);
+        jPanel5.removeAll();
+        jPanel5.add(chartPanel, BorderLayout.CENTER);
+        jPanel5.validate();
+        jPanel5.setVisible(true);
+    }
 }
