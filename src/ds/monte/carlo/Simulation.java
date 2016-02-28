@@ -26,6 +26,8 @@ public class Simulation extends SwingWorker<Integer, Integer>{
 
     private double part02, part04, part05;
     private double decision04;
+    private double[] growth;
+    int successful;
 
     public Simulation(int replications, long initSeed) {
         this.numberOfReplications = replications;
@@ -54,16 +56,19 @@ public class Simulation extends SwingWorker<Integer, Integer>{
         // decision
         Simulation.gend04 = new Random(seed.nextInt());
         dictionary = new HashMap<>();
+        growth = new double [replications/100];
+        successful = 0; // increment when tp_mc <= tp
     }
 
     @Override
     protected Integer doInBackground() throws Exception {
 
         double tp = 140;            // trvanie projektu
-        double tp_mc = 0;           // trvanie projektu v jednom behu
-        int successful = 0;      // increment when tp_mc <= tp
+        double tp_mc = 0;           // trvanie projektu v jednom behu     
         long sumOfTimes = 0;     // suma vyslednych casov kvoli priemeru
         int current = 0;         // iterator
+        int growthIterator = 0;
+        double tempAvg = 0;
         int progress = 0;        // <0, 100> vstup pre progress bar
         
         while (current < numberOfReplications) {
@@ -81,15 +86,25 @@ public class Simulation extends SwingWorker<Integer, Integer>{
                 dictionary.put(Math.round(tp_mc), count + 1);
             }
             // progress bar
-            if(current%1000==0) {
+            if(current%100==0) {
                 progress = (int)((double)current/numberOfReplications*100);
                 setProgress(progress);
             }
             // calculations
             successful = (tp_mc <= tp) ? (successful + 1) : successful;
+            /*if(tp_mc > 118 && tp_mc < 178) {
+                successful++;
+            }*/
             sumOfTimes += tp_mc;
             tp_mc = 0;
             current++;
+            // parcialne priemery
+            if(current%100==0) {
+                tempAvg = (double)sumOfTimes/current;
+                //System.out.println(tempAvg);
+                growth[growthIterator] = (tempAvg);
+                growthIterator++;
+            }
         }
         System.out.println("SUCC " + (double)successful/numberOfReplications);
         System.out.println("AVG " + (double)sumOfTimes/numberOfReplications);
@@ -149,7 +164,7 @@ public class Simulation extends SwingWorker<Integer, Integer>{
             time5 = gen5.nextInt((55 - 40) + 1) + 40;
         }
         
-        // diskretne rovnomerne, Tmin = 10, Tmax = 16
+        // spojite rovnomerne, Tmin = 10, Tmax = 16
         time6 = gen6.nextDouble()*(16 - 10) + 10;
         
         if(decision04 < 0.32) {
@@ -157,9 +172,9 @@ public class Simulation extends SwingWorker<Integer, Integer>{
         } else {
             time7 = gen7.nextDouble()*(29 - 20) + 20;
         }
-        // diskretne rovnomerne, Tmin = 12, Tmax = 17
+        // spojite rovnomerne, Tmin = 12, Tmax = 17
         time8 = gen8.nextDouble()*(17 - 12) + 12;
-        // diskretne rovnomerne, Tmin = 13, Tmax = 27
+        // spojite rovnomerne, Tmin = 13, Tmax = 27
         time9 = gen9.nextDouble()*(27 - 13) + 13;
     }
 
@@ -190,5 +205,33 @@ public class Simulation extends SwingWorker<Integer, Integer>{
     
     public HashMap<Long, Integer> getHashMap() {
         return dictionary;
+    }
+    
+    public double[] getGrowthMap() {
+        return growth;
+    }
+    
+    public int getSuccessful() {
+        return successful;
+    }
+    
+    public int findInterval(int min, int max) {
+        double tp = 140;            // trvanie projektu
+        double tp_mc = 0;           // trvanie projektu v jednom behu     
+        int current = 0;         // iterator
+
+        while (current < numberOfReplications) {
+            // setup of one run
+            generateTimes();
+            tp_mc = sumTimes();
+
+            if(tp_mc > min && tp_mc < max) {
+                successful++;
+            }
+            tp_mc = 0;
+            current++;
+        }
+        
+        return successful;
     }
 }
