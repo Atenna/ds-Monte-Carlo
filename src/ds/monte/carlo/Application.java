@@ -19,6 +19,8 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.CategoryLabelPositions;
+import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
@@ -35,13 +37,15 @@ public class Application extends javax.swing.JFrame implements PropertyChangeLis
      */
     
     Simulation monteCarlo;
-    
+    int numberOfReplications, initSeed;
     public Application() {
         initComponents();
         initProgressBar();
         this.setTitle("Monte Carlo");
         ImageIcon img = new ImageIcon("img.png");
         this.setIconImage(img.getImage());
+        numberOfReplications = 1000;
+        initSeed = 0;
     }
 
     /**
@@ -62,10 +66,9 @@ public class Application extends javax.swing.JFrame implements PropertyChangeLis
         jPanel4 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jTextField1 = new javax.swing.JTextField();
+        jLabel5 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         jTextField2 = new javax.swing.JTextField();
-        jLabel3 = new javax.swing.JLabel();
-        jTextField3 = new javax.swing.JTextField();
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -139,41 +142,45 @@ public class Application extends javax.swing.JFrame implements PropertyChangeLis
         jTextField1.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         jTextField1.setText("100000");
 
+        jLabel5.setIcon(new javax.swing.ImageIcon("C:\\Users\\Carmen\\Documents\\NetBeansProjects\\ds Monte Carlo\\src\\ds\\monte\\carlo\\save.png")); // NOI18N
+        jLabel5.setText("jLabel5");
+        jLabel5.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jLabel5MouseClicked(evt);
+            }
+        });
+
         jLabel2.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
-        jLabel2.setText("Length of a needle");
+        jLabel2.setText("Seed");
 
         jTextField2.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
         jTextField2.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        jTextField2.setText("10");
-
-        jLabel3.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
-        jLabel3.setText("Distance between lines");
-
-        jTextField3.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
-        jTextField3.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        jTextField3.setText("9");
+        jTextField2.setText("0");
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel4Layout.createSequentialGroup()
-                .addGap(51, 51, 51)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel1)
-                    .addComponent(jLabel2)
-                    .addComponent(jLabel3))
-                .addGap(46, 46, 46)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jTextField2, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jTextField3, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jTextField1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 114, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 112, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel4Layout.createSequentialGroup()
+                        .addGap(51, 51, 51)
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabel2)
+                            .addComponent(jLabel1))
+                        .addGap(52, 52, 52)
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jTextField1, javax.swing.GroupLayout.DEFAULT_SIZE, 112, Short.MAX_VALUE)
+                            .addComponent(jTextField2))))
                 .addGap(55, 55, 55))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
-                .addGap(29, 29, 29)
+                .addGap(78, 78, 78)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
                     .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -181,11 +188,9 @@ public class Application extends javax.swing.JFrame implements PropertyChangeLis
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
                     .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jTextField3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel3))
-                .addContainerGap(163, Short.MAX_VALUE))
+                .addGap(17, 17, 17)
+                .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(93, Short.MAX_VALUE))
         );
 
         jTabbedPane4.addTab("Settings", jPanel4);
@@ -207,7 +212,7 @@ public class Application extends javax.swing.JFrame implements PropertyChangeLis
     private void jLabel4MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel4MouseClicked
         ImageIcon img = new ImageIcon("go.png");
         this.setIconImage(img.getImage());
-        monteCarlo = new Simulation(15000000);
+        monteCarlo = new Simulation(numberOfReplications, initSeed);
         monteCarlo.addPropertyChangeListener(this);
         System.out.println("Simulacia vytvorena");
         try {
@@ -216,6 +221,13 @@ public class Application extends javax.swing.JFrame implements PropertyChangeLis
             Logger.getLogger(Application.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jLabel4MouseClicked
+
+    private void jLabel5MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel5MouseClicked
+        String replications  = jTextField1.getText();
+        numberOfReplications = Integer.parseInt(replications);
+        String seed          = jTextField2.getText();
+        initSeed             = Integer.parseInt(seed);
+    }//GEN-LAST:event_jLabel5MouseClicked
 
     /**
      * @param args the command line arguments
@@ -269,8 +281,8 @@ public class Application extends javax.swing.JFrame implements PropertyChangeLis
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
@@ -279,7 +291,6 @@ public class Application extends javax.swing.JFrame implements PropertyChangeLis
     private javax.swing.JTabbedPane jTabbedPane4;
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField2;
-    private javax.swing.JTextField jTextField3;
     // End of variables declaration//GEN-END:variables
 
     private void initProgressBar() {
@@ -293,12 +304,14 @@ public class Application extends javax.swing.JFrame implements PropertyChangeLis
         jProgressBar1.putClientProperty("Nimbus.Overrides", defaults);
     }
 
-    private void createGraph(HashMap<Integer, Integer> dictionary) {
+    private void createGraph(HashMap<Long, Integer> dictionary) {
         
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+        long checksum = 0;
         
-        for (Integer key : dictionary.keySet()) {
+        for (Long key : dictionary.keySet()) {
             dataset.setValue(dictionary.get(key), "", ""+key);
+            checksum += dictionary.get(key);
          }
 
         JFreeChart chart = ChartFactory.createBarChart("Statistics Here", "", "", dataset, PlotOrientation.VERTICAL, false, false, false);
@@ -308,9 +321,13 @@ public class Application extends javax.swing.JFrame implements PropertyChangeLis
         
         ValueAxis vAxis = catPlot.getRangeAxis();
         CategoryAxis cAxis = catPlot.getDomainAxis();
+        
+        cAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_90);
+        
         Font font = new Font("SansSerif", Font.PLAIN, 12);
+        Font fontc = new Font("SansSerif", Font.PLAIN, 10);
         vAxis.setTickLabelFont(font);
-        cAxis.setTickLabelFont(font);
+        cAxis.setTickLabelFont(fontc);
         
         BarRenderer renderer = (BarRenderer) catPlot.getRenderer();
         Color bootstrapGreen = new Color(92,184,92);
@@ -321,5 +338,8 @@ public class Application extends javax.swing.JFrame implements PropertyChangeLis
         jPanel5.add(chartPanel, BorderLayout.CENTER);
         jPanel5.validate();
         jPanel5.setVisible(true);
+        
+        System.out.println("Checksum "+checksum);
+        System.out.println("NumberOfReplications " + numberOfReplications);
     }
 }

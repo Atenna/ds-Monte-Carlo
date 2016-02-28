@@ -13,7 +13,7 @@ public class Simulation extends SwingWorker<Integer, Integer>{
 
     private int numberOfReplications;
 
-    private final HashMap<Integer, Integer> dictionary; // uklada pocetnost vyslednych casov kvoli barchartu
+    private final HashMap<Long, Integer> dictionary; // uklada pocetnost vyslednych casov kvoli barchartu
 
     private static Random seed;
     private static Random gen1, gen2, gen3, gen6,
@@ -21,15 +21,22 @@ public class Simulation extends SwingWorker<Integer, Integer>{
             gen02, gen04, gen05, // generatory pre diskretne empiricke rozdelenie
             gend04;              // modeluje decision, ci sa aktivita 4 vykona alebo nie
 
-    private int time1, time2, time3, time6, time5, 
+    private double time1, time2, time3, time6, time5, 
                 time4, time7, time8, time9;
 
     private double part02, part04, part05;
     private double decision04;
 
-    public Simulation(int replications) {
+    public Simulation(int replications, long initSeed) {
         this.numberOfReplications = replications;
-        Simulation.seed = new Random();
+        
+        if(initSeed == 0) {
+            // nepouzije sa seed 
+            Simulation.seed = new Random();
+        } else {
+            Simulation.seed = new Random(initSeed);
+        }
+        
         // diskretne rovnomerne rozdelenie
         Simulation.gen1 = new Random(seed.nextInt());
         Simulation.gen2 = new Random(seed.nextInt());
@@ -52,8 +59,8 @@ public class Simulation extends SwingWorker<Integer, Integer>{
     @Override
     protected Integer doInBackground() throws Exception {
 
-        int tp = 140;            // trvanie projektu
-        int tp_mc = 0;           // trvanie projektu v jednom behu
+        double tp = 140;            // trvanie projektu
+        double tp_mc = 0;           // trvanie projektu v jednom behu
         int successful = 0;      // increment when tp_mc <= tp
         long sumOfTimes = 0;     // suma vyslednych casov kvoli priemeru
         int current = 0;         // iterator
@@ -63,13 +70,15 @@ public class Simulation extends SwingWorker<Integer, Integer>{
             // setup of one run
             generateTimes();
             tp_mc = sumTimes();
+            //System.out.println(Math.round(tp_mc));
             // map of values
-            Integer count = dictionary.get(tp_mc);
+            Integer count = dictionary.get(Math.round(tp_mc));
             if (count == null) {
-                dictionary.put(tp_mc, 1);
+                dictionary.put(Math.round(tp_mc), 1);
             }
             else {
-                dictionary.put(tp_mc, count + 1);
+                //System.out.println(Math.round(tp_mc) + ": " + count);
+                dictionary.put(Math.round(tp_mc), count + 1);
             }
             // progress bar
             if(current%1000==0) {
@@ -115,18 +124,12 @@ public class Simulation extends SwingWorker<Integer, Integer>{
         }
         // diskretne rovnomerne, Tmin = 48, Tmax = 92
         time3 = gen3.nextInt((92 - 48) + 1) + 48;
-        // diskretne rovnomerne, Tmin = 10, Tmax = 16
-        time6 = gen6.nextInt(16 - 10) + 10;
         
         //  Pravdepodobnosť, že sa aktivita 4 nebude vykonávať je 32%.  
         decision04 = gend04.nextDouble();
         if (decision04 < 0.32) {
             // 4 sa nebude vykonavat
             time4 = 0;
-            // diskretne rovnomerne, Tmin = 20, Tmax = 29
-            time7 = gen7.nextInt(29 - 20) + 20;
-            // // V prípade, že sa aktivita 4 z projektu vypustí predĺži sa čas trvania aktivity 7 o 15%.
-            time7 += time7*0.15;
         } // diskretne empiricke 
         else {
             part04 = gen04.nextDouble();
@@ -135,7 +138,6 @@ public class Simulation extends SwingWorker<Integer, Integer>{
             } else {
                 time4 = gen4.nextInt((44 - 28) + 1) + 28;
             }
-            time7 = gen7.nextInt(29 - 20) + 20;
         }
         // diskretne empiricke 
         part05 = gen05.nextDouble();
@@ -146,15 +148,24 @@ public class Simulation extends SwingWorker<Integer, Integer>{
         } else {
             time5 = gen5.nextInt((55 - 40) + 1) + 40;
         }
+        
+        // diskretne rovnomerne, Tmin = 10, Tmax = 16
+        time6 = gen6.nextDouble()*(16 - 10) + 10;
+        
+        if(decision04 < 0.32) {
+            time7 = (gen7.nextDouble()*(29 - 20) + 20)*1.15;
+        } else {
+            time7 = gen7.nextDouble()*(29 - 20) + 20;
+        }
         // diskretne rovnomerne, Tmin = 12, Tmax = 17
-        time8 = gen8.nextInt(17 - 12) + 12;
+        time8 = gen8.nextDouble()*(17 - 12) + 12;
         // diskretne rovnomerne, Tmin = 13, Tmax = 27
-        time9 = gen9.nextInt(27 - 13) + 13;
+        time9 = gen9.nextDouble()*(27 - 13) + 13;
     }
 
-    private int sumTimes() {
-        int length = time1;
-        int path1, path2, path3;
+    private double sumTimes() {
+        double length = time1;
+        double path1, path2, path3;
         
         path1 = time2 + time6;
         
@@ -164,20 +175,20 @@ public class Simulation extends SwingWorker<Integer, Integer>{
         
         if(time4 == 0) {
             // aktivita 4 sa nevykona, pouzijeme cesty 1 a 3
-            path2 += time5;
-            length += (path1 < path3) ? path1 : path3;
+            path1 += time5;
+            length += (path1 > path3) ? path1 : path3;
             length += time9;
             
         } else {
             // aktivita 4 sa vykona, hladame dlhsiu cestu z (1 a 2) a 3
-            int decision1 = max(path1, path2) + time5;
+            double decision1 = max(path1, path2) + time5;
             length += max(decision1, path3) + time9;
         }
         
         return length;
     }
     
-    public HashMap<Integer, Integer> getHashMap() {
+    public HashMap<Long, Integer> getHashMap() {
         return dictionary;
     }
 }
