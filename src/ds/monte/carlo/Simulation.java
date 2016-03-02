@@ -14,20 +14,24 @@ public class Simulation extends SwingWorker<Integer, Integer>{
     private int numberOfReplications;
 
     private final HashMap<Long, Integer> dictionary; // uklada pocetnost vyslednych casov kvoli barchartu
+    private final HashMap<Integer, Integer> probability; // key: maxDay, value: # successful
 
     private static Random seed;
-    private static Random gen1, gen2, gen3, gen6,
-            gen5, gen4, gen7, gen8, gen9,
+    private static Random gen1, gen2A, gen2B, gen2C, gen3, gen6,
+            gen5A, gen5B, gen5C, gen4A, gen4B, gen7, gen8, gen9,
             gen02, gen04, gen05, // generatory pre diskretne empiricke rozdelenie
             gend04;              // modeluje decision, ci sa aktivita 4 vykona alebo nie
 
     private double time1, time2, time3, time6, time5, 
                 time4, time7, time8, time9;
+    
+    private double percentage, average;
 
     private double part02, part04, part05;
     private double decision04;
     private double[] growth;
     int successful;
+    int p80;
 
     public Simulation(int replications, long initSeed) {
         this.numberOfReplications = replications;
@@ -41,11 +45,16 @@ public class Simulation extends SwingWorker<Integer, Integer>{
         
         // diskretne rovnomerne rozdelenie
         Simulation.gen1 = new Random(seed.nextInt());
-        Simulation.gen2 = new Random(seed.nextInt());
+        Simulation.gen2A = new Random(seed.nextInt());
+        Simulation.gen2B = new Random(seed.nextInt());
+        Simulation.gen2C = new Random(seed.nextInt());
         Simulation.gen3 = new Random(seed.nextInt());
         Simulation.gen6 = new Random(seed.nextInt());
-        Simulation.gen5 = new Random(seed.nextInt());
-        Simulation.gen4 = new Random(seed.nextInt());
+        Simulation.gen5A = new Random(seed.nextInt());
+        Simulation.gen5B = new Random(seed.nextInt());
+        Simulation.gen5C = new Random(seed.nextInt());
+        Simulation.gen4A = new Random(seed.nextInt());
+        Simulation.gen4B = new Random(seed.nextInt());
         Simulation.gen7 = new Random(seed.nextInt());
         Simulation.gen8 = new Random(seed.nextInt());
         Simulation.gen9 = new Random(seed.nextInt());
@@ -56,8 +65,12 @@ public class Simulation extends SwingWorker<Integer, Integer>{
         // decision
         Simulation.gend04 = new Random(seed.nextInt());
         dictionary = new HashMap<>();
+        probability = new HashMap<>();
         growth = new double [replications/100];
         successful = 0; // increment when tp_mc <= tp
+        average = 0;
+        percentage = 0;
+        p80 = 300;
     }
 
     @Override
@@ -106,6 +119,8 @@ public class Simulation extends SwingWorker<Integer, Integer>{
                 growthIterator++;
             }
         }
+        percentage = (double)successful/numberOfReplications;
+        average = (double)sumOfTimes/numberOfReplications;
         System.out.println("SUCC " + (double)successful/numberOfReplications);
         System.out.println("AVG " + (double)sumOfTimes/numberOfReplications);
         
@@ -131,11 +146,11 @@ public class Simulation extends SwingWorker<Integer, Integer>{
         // diskretne empiricke 
         part02 = gen02.nextDouble();
         if (part02 < 0.2) {
-            time2 = gen2.nextInt((29 - 10) + 1) + 10;
+            time2 = gen2A.nextInt((29 - 10) + 1) + 10;
         } else if (part02 >= 0.2 && part02 < 0.6) {
-            time2 = gen2.nextInt((48 - 30) + 1) + 30;
+            time2 = gen2B.nextInt((48 - 30) + 1) + 30;
         } else {
-            time2 = gen2.nextInt((65 - 49) + 1) + 49;
+            time2 = gen2C.nextInt((65 - 49) + 1) + 49;
         }
         // diskretne rovnomerne, Tmin = 48, Tmax = 92
         time3 = gen3.nextInt((92 - 48) + 1) + 48;
@@ -149,28 +164,27 @@ public class Simulation extends SwingWorker<Integer, Integer>{
         else {
             part04 = gen04.nextDouble();
             if (part04 < 0.2) {
-                time4 = gen4.nextInt((27 - 19) + 1) + 19;
+                time4 = gen4A.nextInt((27 - 19) + 1) + 19;
             } else {
-                time4 = gen4.nextInt((44 - 28) + 1) + 28;
+                time4 = gen4B.nextInt((44 - 28) + 1) + 28;
             }
         }
         // diskretne empiricke 
         part05 = gen05.nextDouble();
         if (part05 < 0.2) {
-            time5 = gen5.nextInt((19 - 5) + 1) + 5;
+            time5 = gen5A.nextInt((19 - 5) + 1) + 5;
         } else if (part05 >= 0.2 && part05 < 0.7) {
-            time5 = gen5.nextInt((39 - 20) + 1) + 20;
+            time5 = gen5B.nextInt((39 - 20) + 1) + 20;
         } else {
-            time5 = gen5.nextInt((55 - 40) + 1) + 40;
+            time5 = gen5C.nextInt((55 - 40) + 1) + 40;
         }
         
         // spojite rovnomerne, Tmin = 10, Tmax = 16
         time6 = gen6.nextDouble()*(16 - 10) + 10;
         
+        time7 = (gen7.nextDouble()*(29 - 20) + 20);
         if(decision04 < 0.32) {
-            time7 = (gen7.nextDouble()*(29 - 20) + 20)*1.15;
-        } else {
-            time7 = gen7.nextDouble()*(29 - 20) + 20;
+            time7 *=1.15;
         }
         // spojite rovnomerne, Tmin = 12, Tmax = 17
         time8 = gen8.nextDouble()*(17 - 12) + 12;
@@ -203,7 +217,7 @@ public class Simulation extends SwingWorker<Integer, Integer>{
         return length;
     }
     
-    public HashMap<Long, Integer> getHashMap() {
+    public HashMap<Long, Integer> getDictionary() {
         return dictionary;
     }
     
@@ -215,23 +229,42 @@ public class Simulation extends SwingWorker<Integer, Integer>{
         return successful;
     }
     
-    public int findInterval(int min, int max) {
+    public HashMap<Integer, Integer> findProbability() {
         double tp = 140;            // trvanie projektu
         double tp_mc = 0;           // trvanie projektu v jednom behu     
         int current = 0;         // iterator
-
-        while (current < numberOfReplications) {
-            // setup of one run
-            generateTimes();
-            tp_mc = sumTimes();
-
-            if(tp_mc > min && tp_mc < max) {
-                successful++;
-            }
-            tp_mc = 0;
-            current++;
-        }
+        int iterator = 0;
+        int successfulHere = 0;
+        double prob = 0;
         
-        return successful;
+        while(iterator < 300) {
+            while (current < numberOfReplications) {
+                generateTimes();
+                tp_mc = sumTimes();
+                
+                if(tp_mc <= iterator) {
+                    successfulHere++;
+                }
+                tp_mc = 0;
+                current++;
+            }
+            prob = (double)successfulHere/numberOfReplications;
+            if(prob >= 0.8 && iterator < p80) {
+                p80 = iterator;
+            }
+            probability.put(iterator, successfulHere);
+            successfulHere = 0;
+            current = 0;
+            iterator++;
+        }
+        return probability;
+    }
+    
+    public double getAvg() {
+        return average;
+    }
+    
+    public int getP80() {
+        return p80;
     }
 }
