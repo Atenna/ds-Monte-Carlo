@@ -538,7 +538,7 @@ public class Application extends javax.swing.JFrame implements PropertyChangeLis
         CategoryAxis cAxis = catPlot.getDomainAxis();
         
         cAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_90);
-        vAxis.setRange(min-1, max+1);
+        vAxis.setRange(min, max);
         
         cAxis.setTickLabelsVisible(false); 
         
